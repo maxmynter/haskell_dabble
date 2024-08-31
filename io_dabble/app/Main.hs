@@ -1,22 +1,26 @@
 module Main where
 
-newtype Entry = Entry String
+newtype Entry = Entry String deriving (Show)
 
-newtype Entries = Entries [Entry]
+newtype Entries = Entries [Entry] deriving (Show)
+
+printEntry :: Entry -> IO ()
+printEntry (Entry s) = putStrLn s
 
 printEntries :: Entries -> IO ()
-printEntries (Entries (Entry a) : (Entries b)) = do
-  putStrLn a
-  printEntries b
-  return ()
+printEntries (Entries []) = return ()
+printEntries (Entries es) = do
+  printEntry $ head es
+  printEntries $ Entries $ tail es
 
-entryLoop :: Entries -> IO Entries
+entryLoop :: Entries -> IO ()
 entryLoop (Entries entries) = do
   putStrLn "Type Something"
-  inpt <- getLine
-  allEntries <- Entries (entries ++ [Entry inpt])
-  putStrLn $ "You typed " ++ inpt
+  input <- getLine
+  let allEntries = Entries (entries ++ [Entry input])
+  putStrLn "All entries so far: "
+  printEntries allEntries
   entryLoop allEntries
 
-main :: IO Entries
+main :: IO ()
 main = entryLoop $ Entries []
