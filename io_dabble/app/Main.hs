@@ -1,5 +1,7 @@
 module Main where
 
+import Text.Read (readMaybe)
+
 data UserAction = Quit | Help | ListEntries | ToggleN Int | AddTask String
 
 newtype Task = Task {unTask :: (String, Bool, Int)} deriving (Show)
@@ -60,29 +62,36 @@ printHelp = do
   putStrLn "`:l` to list entries"
   putStrLn "`:<n>` to toggle done status of task n"
 
-castUserAction :: String -> UserAction
+castUserAction :: String -> Maybe UserAction
 castUserAction actionStr = case actionStr of
   ':' : cmd -> case cmd of
-    "q" -> Quit
-    "l" -> ListEntries
-    n -> ToggleN $ read n
-  "?" -> Help
-  task -> AddTask task
+    "q" -> Just Quit
+    "l" -> Just ListEntries
+    n -> do
+      case readMaybe n of
+        Just num -> Just $ ToggleN num
+        Nothing -> Nothing
+  "?" -> Just Help
+  task -> Just $ AddTask task
 
 entryLoop :: Entries -> IO ()
 entryLoop entries = do
   printActions
   input <- getLine
   case castUserAction input of
-    Quit -> putStrLn "Good Bye"
-    Help -> do
+    Just Quit -> putStrLn "Good Bye"
+    Just Help -> do
       printHelp
       entryLoop entries
-    ListEntries -> do
+    Just ListEntries -> do
       printEntries entries
       entryLoop entries
-    ToggleN n -> entryLoop $ entriesToggleDoneAt entries n
-    AddTask task -> entryLoop $ addTask entries (Task (task, False, 1 + entriesLength entries))
+    Just (ToggleN n) -> entryLoop $ entriesToggleDoneAt entries n
+    Just (AddTask task) -> entryLoop $ addTask entries (Task (task, False, 1 + entriesLength entries))
+    Nothing -> do
+      putStrLn $ "Invalid Input " ++ input
+      putStrLn "Type '?' for help."
+      entryLoop entries
 
 main :: IO ()
 main = entryLoop $ Entries []
