@@ -1,6 +1,6 @@
 module Main where
 
-data UserAction = Quit | ListEntries | ToggleN Int | AddTask String
+data UserAction = Quit | Help | ListEntries | ToggleN Int | AddTask String
 
 data Task = Task {description :: String, done :: Bool, idx :: Int} deriving (Show)
 
@@ -38,9 +38,12 @@ entriesToggleDoneAt (Entries es) n = Entries (toggleAt es n)
 
 printActions :: IO ()
 printActions = do
-  putStrLn "Menu!"
-  putStrLn "Type..."
-  putStrLn "entry to add to entries"
+  putStrLn "Type task and Return to submit."
+  putStrLn "'?' for help."
+
+printHelp :: IO ()
+printHelp = do
+  putStrLn "Commands are preceeded by a colon (:). Available commands"
   putStrLn "`:q` to quit"
   putStrLn "`:l` to list entries"
   putStrLn "`:<n>` to toggle done status of task n"
@@ -51,6 +54,7 @@ castUserAction actionStr = case actionStr of
     "q" -> Quit
     "l" -> ListEntries
     n -> ToggleN $ read n
+  "?" -> Help
   task -> AddTask task
 
 entryLoop :: Entries -> IO ()
@@ -59,6 +63,9 @@ entryLoop entries = do
   input <- getLine
   case castUserAction input of
     Quit -> putStrLn "Good Bye"
+    Help -> do
+      printHelp
+      entryLoop entries
     ListEntries -> do
       printEntries entries
       entryLoop entries
