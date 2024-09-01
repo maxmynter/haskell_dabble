@@ -2,7 +2,7 @@ module Main where
 
 data UserAction = Quit | Help | ListEntries | ToggleN Int | AddTask String
 
-data Task = Task {description :: String, done :: Bool, idx :: Int} deriving (Show)
+newtype Task = Task {unTask :: (String, Bool, Int)} deriving (Show)
 
 newtype Entries = Entries [Task] deriving (Show)
 
@@ -13,10 +13,10 @@ entriesLength :: Entries -> Int
 entriesLength (Entries entries) = length entries
 
 printTaskCheckbox :: Task -> String
-printTaskCheckbox task = if done task then "-- [" ++ "x" ++ "] " else "-- [ ] "
+printTaskCheckbox task = if getDone task then "-- [" ++ "x" ++ "] " else "-- [ ] "
 
 printTask :: Task -> IO ()
-printTask task = putStrLn $ printTaskCheckbox task ++ description task
+printTask task = putStrLn $ printTaskCheckbox task ++ getDescription task
 
 printEntries :: Entries -> IO ()
 printEntries (Entries []) = return ()
@@ -27,12 +27,24 @@ printEntries (Entries es) = do
 addTask :: Entries -> Task -> Entries
 addTask (Entries entries) entry = Entries (entries ++ [entry])
 
+updateTask :: Task -> (String -> String) -> (Bool -> Bool) -> (Int -> Int) -> Task
+updateTask (Task (desc, done, idx)) upDesc upDone upIdx = Task (upDesc desc, upDone done, upIdx idx)
+
+getDescription :: Task -> String
+getDescription = (\(d, _, _) -> d) . unTask
+
+getDone :: Task -> Bool
+getDone = (\(_, d, _) -> d) . unTask
+
+getIdx :: Task -> Int
+getIdx = (\(_, _, i) -> i) . unTask
+
 entriesToggleDoneAt :: Entries -> Int -> Entries
 entriesToggleDoneAt (Entries es) n = Entries (toggleAt es n)
   where
     toggleAt [] _ = []
     toggleAt (t : ts) indx
-      | indx == 0 = t {done = not (done t)} : ts
+      | indx == 0 = updateTask t id not id : ts
       | indx > 0 = [t] <> toggleAt ts (indx - 1)
       | otherwise = t : ts
 
@@ -70,7 +82,7 @@ entryLoop entries = do
       printEntries entries
       entryLoop entries
     ToggleN n -> entryLoop $ entriesToggleDoneAt entries n
-    AddTask task -> entryLoop $ addTask entries (Task task False (1 + entriesLength entries))
+    AddTask task -> entryLoop $ addTask entries (Task (task, False, 1 + entriesLength entries))
 
 main :: IO ()
 main = entryLoop $ Entries []
