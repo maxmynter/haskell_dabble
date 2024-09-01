@@ -1,5 +1,7 @@
 module Main where
 
+data UserAction = Quit | ListEntries | ToggleN Int | AddTask String
+
 data Task = Task {description :: String, done :: Bool, idx :: Int} deriving (Show)
 
 newtype Entries = Entries [Task] deriving (Show)
@@ -34,25 +36,34 @@ entriesToggleDoneAt (Entries es) n = Entries (toggleAt es n)
       | indx > 0 = [t] <> toggleAt ts (indx - 1)
       | otherwise = t : ts
 
-entryLoop :: Entries -> IO ()
-entryLoop entries = do
+printActions :: IO ()
+printActions = do
   putStrLn "Menu!"
   putStrLn "Type..."
   putStrLn "entry to add to entries"
   putStrLn "`:q` to quit"
   putStrLn "`:l` to list entries"
   putStrLn "`:<n>` to toggle done status of task n"
+
+castUserAction :: String -> UserAction
+castUserAction actionStr = case actionStr of
+  ':' : cmd -> case cmd of
+    "q" -> Quit
+    "l" -> ListEntries
+    n -> ToggleN $ read n
+  task -> AddTask task
+
+entryLoop :: Entries -> IO ()
+entryLoop entries = do
+  printActions
   input <- getLine
-  case input of
-    ":q" -> putStrLn "Good Bye"
-    ":l" -> do
+  case castUserAction input of
+    Quit -> putStrLn "Good Bye"
+    ListEntries -> do
       printEntries entries
       entryLoop entries
-    ':' : n -> do
-      entryLoop $ entriesToggleDoneAt entries (read n)
-    typed -> do
-      putStrLn "Entries: "
-      entryLoop $ addTask entries (Task typed False (1 + entriesLength entries))
+    ToggleN n -> entryLoop $ entriesToggleDoneAt entries n
+    AddTask task -> entryLoop $ addTask entries (Task task False (1 + entriesLength entries))
 
 main :: IO ()
 main = entryLoop $ Entries []
