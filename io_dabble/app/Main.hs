@@ -32,7 +32,7 @@ entriesToggleDoneAt (Entries es) n = Entries (toggleAt es n)
   where
     toggleAt [] _ = []
     toggleAt (t : ts) indx
-      | indx == 0 = Task (description t) (not $ done t) (idx t) : ts
+      | indx == 0 = t {done = not (done t)} : ts
       | indx > 0 = [t] <> toggleAt ts (indx - 1)
       | otherwise = t : ts
 
