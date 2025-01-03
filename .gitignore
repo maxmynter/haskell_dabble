@@ -1,0 +1,49 @@
+# Haskell build artifacts
+dist
+dist-*
+cabal-dev
+*.o
+*.hi
+*.hie
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+*.prof
+*.aux
+*.hp
+*.eventlog
+
+# Stack build artifacts
+.stack-work/
+stack.yaml.lock
+
+# Cabal build artifacts
+.cabal-debug
+cabal.project.local
+cabal.project.local~
+
+# Directory created by cabal init
+.cabal-debug/
+
+# Editor/IDE specific
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+.vs/
+
+# Binary output
+*.exe
+
+# Mac specific
+.DS_Store
+
+# Local development files
+.env
+.env.local
